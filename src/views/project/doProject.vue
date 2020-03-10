@@ -66,9 +66,38 @@
                         <el-button type="text" icon="el-icon-check" class="success" @click="handleOn(scope.$index, scope.row)">
                             通过
                         </el-button>
+                        <el-button type="text" icon="el-icon-lx-text" class="success" @click="handleDetail(scope.$index, scope.row)">
+                            查看项目详情
+                        </el-button>
                     </template>
                 </el-table-column>
             </el-table>
+
+
+            <el-dialog  :visible.sync="dialogVisible" width="40%" align="center">
+                <h2 style="font-weight: 400;" slot="title">项目详情</h2>
+                <div class="project-detail">
+                    <div class="project-header">
+                        <p> 标题： {{projectData.title}}  </p>
+                        <p> 副标题： {{projectData.subtitle}} </p>
+                    </div>
+                    <div class="project-video">
+                        <h3>项目视频</h3>
+                        <video v-if="projectData.video" controls :src="'/api/uploads/' + projectData.video"></video>
+                        <p v-else> 暂无视频 </p>
+                    </div>
+                    <div class="project-story">
+                        <div>
+                            {{ projectData.story }}
+                        </div>
+                    </div>
+                </div>
+                <span slot="footer" class="dialog-footer">
+                    <el-button @click="dialogVisible = false">取 消</el-button>
+                    <el-button type="primary" @click="dialogVisible = false">确 定</el-button>
+                </span>
+            </el-dialog>
+
             <div class="pagination">
                 <el-pagination
                     background
@@ -102,7 +131,9 @@ export default {
             tableData: [],
             delList: [],
             pageTotal: 0,
-            categories: []
+            categories: [],
+            dialogVisible: false,
+            projectData: { owner: {}, category: {} }
         };
     },
     created() {
@@ -175,7 +206,10 @@ export default {
                 })
                 .catch(() => {});
         },
-        handleDetail(index, row) {},
+        handleDetail(index, row) {
+            this.projectData = row;
+            this.dialogVisible = true;
+        },
         // fotmmater日期
         createDate(row, column, cellValue) {
             let date = row.createdat;
@@ -258,5 +292,34 @@ export default {
     margin: auto;
     width: 40px;
     height: 40px;
+}
+.project-header {
+    padding-bottom: 24px;
+}
+.project-header p:first-of-type {
+    font-size: 16px;
+    font-weight: 400px;
+    color: #000;
+    margin-bottom: 6px;
+
+}
+.project-header p:last-of-type {
+    font-size: 14px;
+    line-height: 24px;
+    color: #656969;
+}
+.project-video {
+    padding-bottom: 24px;
+}
+.project-video h3 {
+    font-weight: 500;
+    font-size: 20px;
+    line-height: 24px;
+    margin-bottom: 16px;
+}
+.project-video video {
+    width: 90%;
+    height: 368px;
+    object-fit: cover;
 }
 </style>
