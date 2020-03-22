@@ -4,7 +4,6 @@ node_modules
 example.html
 favicon.ico
 screenshots
-src/components/page
 # local env files
 .env.local
 .env.*.local
