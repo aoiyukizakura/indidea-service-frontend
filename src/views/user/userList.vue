@@ -98,7 +98,6 @@
 </template>
 
 <script>
-import { fetchData } from '../../api/index';
 import { userList, doUserOrAuth } from '../../api/user.js';
 export default {
     name: 'userList',
