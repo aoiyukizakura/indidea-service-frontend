@@ -87,8 +87,12 @@
                         <p v-else> 暂无视频 </p>
                     </div>
                     <div class="project-story">
-                        <div>
-                            {{ projectData.story }}
+                        <h3>项目故事</h3>
+                        <div id="project-viewer">
+                            <!-- {{ projectData.story }} -->
+                            <strong>
+                                正在加载中...
+                            </strong>
                         </div>
                     </div>
                 </div>
@@ -117,6 +121,11 @@
 <script>
 import { projectList, doProject } from '../../api/project';
 import { categoriesList } from '../../api/category';
+import 'tui-editor/dist/tui-editor.css'; // editor ui
+import 'tui-editor/dist/tui-editor-contents.css'; // editor content
+import $ from 'jquery';
+
+const Viewer = require('tui-editor/dist/tui-editor-Viewer');
 export default {
     name: 'doProject',
     data() {
@@ -133,7 +142,8 @@ export default {
             pageTotal: 0,
             categories: [],
             dialogVisible: false,
-            projectData: { owner: {}, category: {} }
+            projectData: { owner: {}, category: {} },
+            viewer: null
         };
     },
     created() {
@@ -208,6 +218,17 @@ export default {
         },
         handleDetail(index, row) {
             this.projectData = row;
+            let story = row.story;
+            if (!story) {
+                story = "<h3 style='text-align:center;font-weight: 400;font-size: 14px;'>暂无故事</h3>";
+            }
+            this.$nextTick(() => {
+                this.viewer = new Viewer({
+                    el: document.querySelector('#project-viewer'),
+                    height: 'auto',
+                    initialValue: story
+                });
+            });
             this.dialogVisible = true;
         },
         // fotmmater日期
@@ -321,5 +342,17 @@ export default {
     width: 90%;
     height: 368px;
     object-fit: cover;
+}
+.project-story h3 {
+    font-weight: 500;
+    font-size: 20px;
+    line-height: 24px;
+    margin-bottom: 16px;
+}
+#project-viewer {
+    text-align: left;
+}
+#project-viewer img {
+    width: 100%;
 }
 </style>

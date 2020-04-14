@@ -83,17 +83,17 @@ export default {
                 {
                     icon: 'el-icon-lx-text',
                     title: '帖子管理',
-                    index: '10',
-                    subs: [
-                        {
-                            title: '帖子列表',
-                            index: 'postList'
-                        },
-                        {
-                            title: '审核帖子',
-                            index: 'doPost'
-                        }
-                    ]
+                    index: 'postList',
+                    // subs: [
+                    //     {
+                    //         title: '帖子列表',
+                    //         index: 'postList'
+                    //     },
+                    //     {
+                    //         title: '审核帖子',
+                    //         index: 'doPost'
+                    //     }
+                    // ]
                 },
                 {
                     icon: 'el-icon-lx-sort',

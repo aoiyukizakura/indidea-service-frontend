@@ -35,6 +35,7 @@
                 <el-table-column label="封面(查看大图)" align="center">
                     <template slot-scope="scope">
                         <el-image
+                            fit="cover"
                             v-if="scope.row.pic"
                             class="table-td-thumb"
                             :src="'/api/uploads/' + scope.row.pic"
@@ -66,9 +67,14 @@
 
                 <el-table-column label="状态" align="center">
                     <template slot-scope="scope">
-                        <el-tag effect="dark" :type="scope.row.status === 5 ? 'success' : scope.row.status === 4 ? 'danger' : ''">{{
-                            scope.row.status === 5 ? '精选项目' : scope.row.status === 4 ? '禁用' : '正常'
-                        }}</el-tag>
+                        <template v-if="scope.row.status !== 6 && targetDate(scope.row) == 0">
+                            <el-tag effect="dark" type="warning">待处理</el-tag>
+                        </template>
+                        <template v-else>
+                            <el-tag effect="dark" :type="scope.row.status === 5 ? 'success' : scope.row.status === 4 ? 'danger' : scope.row.status === 6 ? 'info' : ''">{{
+                                scope.row.status === 5 ? '精选项目' : scope.row.status === 4 ? '禁用' : scope.row.status === 6 ? '众筹结束' : '正常'
+                            }}</el-tag>
+                        </template>
                     </template>
                 </el-table-column>
 
@@ -76,12 +82,19 @@
                 <el-table-column label="操作" width="180" align="center">
                     <template slot-scope="scope">
                         <el-button
+                            v-if="scope.row.status !== 6 && targetDate(scope.row) == 0"
+                            type="text"
+                            icon="el-icon-warning-outline"
+                            class="warning"
+                            @click="handlePass(scope.$index, scope.row)"
+                        >
+                            设置为过期
+                        </el-button>
+                        <el-button
                             type="text"
                             icon="el-icon-edit"
                             @click="handleEdit(scope.$index, scope.row)"
-                            v-if="
-                                scope.row.status !== 5 && scope.row.status != 4 && targetDate(scope.row) !== 0 && targetDate(scope.row) >= 0
-                            "
+                            v-if="scope.row.status !== 5 && scope.row.status != 4 && targetDate(scope.row) > 0"
                         >
                             设置为精选项目
                         </el-button>
@@ -111,21 +124,27 @@
                 </el-table-column>
             </el-table>
 
-            <el-dialog  :visible.sync="dialogVisible" width="40%" align="center">
-                <h2 style="font-weight: 400;" slot="title">项目详情 (进度 {{processPercent(projectData)}} %, 目标金额 {{projectData.targetpoint}}）</h2>
+            <el-dialog :visible.sync="dialogVisible" width="40%" align="center">
+                <h2 style="font-weight: 400;" slot="title">
+                    项目详情 (进度 {{ processPercent(projectData) }} %, 目标金额 {{ projectData.targetpoint }}）
+                </h2>
                 <div class="project-detail">
                     <div class="project-header">
-                        <p> 标题： {{projectData.title}}  </p>
-                        <p> 副标题： {{projectData.subtitle}} </p>
+                        <p>标题： {{ projectData.title }}</p>
+                        <p>副标题： {{ projectData.subtitle }}</p>
                     </div>
                     <div class="project-video">
                         <h3>项目视频</h3>
-                        <video v-if="projectData.video" controls :src="'/api/uploads/' + projectData.video"></video>
-                        <p v-else> 暂无视频 </p>
+                        <video id="project-video" ref="project_video" v-if="projectData.video" controls :src="'/api/uploads/' + projectData.video"></video>
+                        <p v-else>暂无视频</p>
                     </div>
                     <div class="project-story">
-                        <div>
-                            {{ projectData.story }}
+                        <h3>项目故事</h3>
+                        <div id="project-viewer">
+                            <!-- {{ projectData.story }} -->
+                            <strong>
+                                正在加载中...
+                            </strong>
                         </div>
                     </div>
                 </div>
@@ -154,6 +173,11 @@
 <script>
 import { projectList, doProject } from '../../api/project';
 import { categoriesList } from '../../api/category';
+import 'tui-editor/dist/tui-editor.css'; // editor ui
+import 'tui-editor/dist/tui-editor-contents.css'; // editor content
+import $ from 'jquery';
+
+const Viewer = require('tui-editor/dist/tui-editor-Viewer');
 export default {
     name: 'projectList',
     data() {
@@ -170,7 +194,8 @@ export default {
             pageTotal: 0,
             categories: [],
             dialogVisible: false,
-            projectData: { owner: {}, category: {} }
+            projectData: { owner: {}, category: {} },
+            viewer: null
         };
     },
     created() {
@@ -259,8 +284,34 @@ export default {
                 })
                 .catch(() => {});
         },
+        handlePass(index, row) {
+            this.$confirm('确定要结束该项目的众筹吗？', '提示', {
+                type: 'warning'
+            })
+                .then(() => {
+                    this.loading();
+                    doProject(row.id, 6).then(res => {
+                        if (res.data) {
+                            this.getData();
+                            this.closeLoading();
+                        } else this.closeLoading(1);
+                    });
+                })
+                .catch(() => {});
+        },
         handleDetail(index, row) {
             this.projectData = row;
+            let story = row.story;
+            if (!story) {
+                story = "<h3 style='text-align:center;font-weight: 400;font-size: 14px;'>暂无故事</h3>";
+            }
+            this.$nextTick(() => {
+                this.viewer = new Viewer({
+                    el: document.querySelector('#project-viewer'),
+                    height: 'auto',
+                    initialValue: story
+                });
+            });
             this.dialogVisible = true;
         },
         // fotmmater日期
@@ -285,9 +336,9 @@ export default {
             let day = parseInt(rest / (60 * 60 * 24 * 1000));
 
             if (targetdate != null) {
-                return day < 0 ? '已过期' : day;
+                return day < 0 ? 0 : day;
             } else {
-                return '暂无';
+                return 0;
             }
         },
         loading() {
@@ -313,7 +364,17 @@ export default {
             // return 100;
         }
     },
-    computed: {}
+    computed: {},
+    watch: {
+        dialogVisible(to, from) {
+            if (!to) {
+                this.$nextTick(() => {
+                    if(this.$refs.project_video)
+                        this.$refs.project_video.pause();
+                })
+            }
+        }
+    }
 };
 </script>
 
@@ -347,7 +408,8 @@ export default {
     height: 40px;
 }
 
-.project-detail {}
+.project-detail {
+}
 .project-header {
     padding-bottom: 24px;
 }
@@ -356,7 +418,6 @@ export default {
     font-weight: 400px;
     color: #000;
     margin-bottom: 6px;
-
 }
 .project-header p:last-of-type {
     font-size: 14px;
@@ -377,6 +438,20 @@ export default {
     height: 368px;
     object-fit: cover;
 }
-.project-video p {}
-.project-story {}
+.project-video p {
+}
+.project-story {
+}
+.project-story h3 {
+    font-weight: 500;
+    font-size: 20px;
+    line-height: 24px;
+    margin-bottom: 16px;
+}
+#project-viewer {
+    text-align: left;
+}
+.warning {
+    color: #E6A23C;
+}
 </style>

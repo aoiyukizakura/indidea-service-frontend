@@ -61,7 +61,7 @@
                         {{ scope.row.editby === null || scope.row.editby === '' ? '无' : scope.row.editby }}
                     </template>
                 </el-table-column> -->
-                <el-table-column prop="createdat" label="申请时间" :formatter="createDate"></el-table-column>
+                <el-table-column width="200" prop="createdat" label="申请时间" :formatter="createDate"></el-table-column>
                 <el-table-column label="操作" width="180" align="center">
                     <template slot-scope="scope">
                         <template v-if="scope.row.status == 1">
@@ -75,12 +75,12 @@
                         <el-popover
                             v-else
                             placement="top"
-                            width="200"
+                            width="240"
                             trigger="click"
                         >
                             <el-table :data="[scope.row]">
                                 <el-table-column prop="editby" label="审核人"></el-table-column>
-                                <el-table-column label="审核时间" :formatter="createDate"></el-table-column>
+                                <el-table-column width="160" label="审核时间" :formatter="updateDate"></el-table-column>
                             </el-table>
                             <el-button type="text" icon="el-icon-lx-text" style="color:#909399;" slot="reference">
                                 详情
@@ -189,7 +189,15 @@ export default {
         createDate(row, column, cellValue) {
             let date = row.createdat;
             if (date != null) {
-                return new Date(date).toLocaleDateString().replace(/\//g, '-');
+                return new Date(date).toLocaleString().replace(/\//g, '-');
+            } else {
+                return '暂无';
+            }
+        },
+        updateDate(row, column, cellValue) {
+            let date = row.updatedat;
+            if (date != null) {
+                return new Date(date).toLocaleString().replace(/\//g, '-');
             } else {
                 return '暂无';
             }

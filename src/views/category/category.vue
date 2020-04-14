@@ -1,7 +1,7 @@
 <!--
  * @Author: Morpho Sylvie
  * @Date: 2020-03-08 20:18:58
- * @LastEditTime: 2020-03-12 19:35:57
+ * @LastEditTime: 2020-04-14 22:30:22
  * @FilePath: \vue-manage-system\src\views\category\category.vue
  * @Description: 
  -->
@@ -27,14 +27,14 @@ export default {
     }),
     methods: {
         addCategory() {
-            this.$confirm('你确定要增加该条分类吗？这条分类启用后将无法禁用', '提示', {
-                type: 'warning'
-            })
-                .then(() => {
-                    if (this.input === '' || this.input === null) {
-                        this.$message.error('请输入信息');
-                        return;
-                    } else {
+            if (this.input === '' || this.input === null) {
+                this.$message.error('请输入信息');
+                return;
+            } else {
+                this.$confirm('你确定要增加该条分类吗？这条分类启用后将无法禁用', '提示', {
+                    type: 'warning'
+                })
+                    .then(() => {
                         doCategories(this.input).then(res => {
                             if (res.data) {
                                 this.input = '';
@@ -43,9 +43,9 @@ export default {
                             }
                             console.log('res :', res);
                         });
-                    }
-                })
-                .catch(() => {});
+                    })
+                    .catch(() => {});
+            }
         },
         getCategories() {
             categoriesList().then(res => {
